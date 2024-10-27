@@ -35,7 +35,7 @@
       "options": {
         "targetName": "test"
       },
-      "exclude": ["apps/app1-e2e/**/*"]
+      "exclude": ["apps/app1-e2e/**/*", "apps/app2-e2e/**/*"]
     }
   ]
 }
