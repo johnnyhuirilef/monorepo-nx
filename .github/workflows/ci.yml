@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        env:
+          IMAGE_PREFIX: monorepo-nx-
         with:
           fetch-depth: 0
 
@@ -60,23 +62,20 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Check and create Docker Hub repositories if they do not exist
-      - name: Create Docker Hub repositories
-        env:
-          IMAGE_PREFIX: ${{ secrets.IMAGE_PREFIX }}
+      # Check if Docker images exist on Docker Hub
+      - name: Check Docker images
         run: |
           for app in ${{ steps.affected_apps.outputs.apps }}
           do
-            REPO_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -u ${{ secrets.DOCKER_USERNAME }}:${{ secrets.DOCKER_PASSWORD }} https://hub.docker.com/v2/repositories/${{ secrets.DOCKER_USERNAME }}/$IMAGE_PREFIX$app/)
-            if [ $REPO_EXISTS -eq 404 ]; then
-              curl -s -X POST -H "Content-Type: application/json" -u ${{ secrets.DOCKER_USERNAME }}:${{ secrets.DOCKER_PASSWORD }} -d '{"name": "'$IMAGE_PREFIX$app'"}' https://hub.docker.com/v2/repositories/${{ secrets.DOCKER_USERNAME }}/
+            IMAGE_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -u ${{ secrets.DOCKER_USERNAME }}:${{ secrets.DOCKER_PASSWORD }} https://hub.docker.com/v2/repositories/${{ secrets.DOCKER_USERNAME }}/$IMAGE_PREFIX$app/tags/latest/)
+            if [ $IMAGE_EXISTS -ne 200 ]; then
+              echo "Docker image $IMAGE_PREFIX$app:latest does not exist."
+              exit 1
             fi
           done
 
       # Push Docker images to Docker Hub
       - name: Push Docker images
-        env:
-          IMAGE_PREFIX: ${{ secrets.IMAGE_PREFIX }}
         run: |
           for app in ${{ steps.affected_apps.outputs.apps }}
           do
