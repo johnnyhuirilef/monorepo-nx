@@ -44,4 +44,4 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: INPUT_GITHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }} npx nx affected -t lint test build container
+      - run: INPUT_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} npx nx affected -t lint test build container
