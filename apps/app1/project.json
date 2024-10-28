@@ -8,9 +8,7 @@
     "serve": {
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "options": {
         "buildTarget": "app1:build",
         "runBuildTargetDependencies": false
@@ -25,10 +23,31 @@
       }
     },
     "docker-build": {
-      "dependsOn": [
-        "build"
-      ],
+      "dependsOn": ["build"],
       "command": "docker build -f apps/app1/Dockerfile . -t app1"
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "options": {
+        "engine": "docker",
+        "file": "apps/app1/Dockerfile",
+        "push": true,
+        "metadata": {
+          "images": ["app1"],
+          "load": true,
+          "tags": [
+            "type=schedule",
+            "type=ref,event=branch",
+            "type=ref,event=tag",
+            "type=ref,event=pr",
+            "type=sha,prefix=sha-",
+            "type=semver,pattern={{version}}",
+            "type=semver,pattern={{major}}.{{minor}}",
+            "type=semver,pattern={{major}}"
+          ]
+        }
+      }
     }
   }
 }

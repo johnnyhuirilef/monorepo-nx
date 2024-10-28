@@ -21,6 +21,29 @@
           "buildTarget": "app2:build:production"
         }
       }
+    },
+    "container": {
+      "executor": "@nx-tools/nx-container:build",
+      "dependsOn": ["build"],
+      "options": {
+        "engine": "docker",
+        "file": "apps/app2/Dockerfile",
+        "push": true,
+        "metadata": {
+          "images": ["app2"],
+          "load": true,
+          "tags": [
+            "type=schedule",
+            "type=ref,event=branch",
+            "type=ref,event=tag",
+            "type=ref,event=pr",
+            "type=sha,prefix=sha-",
+            "type=semver,pattern={{version}}",
+            "type=semver,pattern={{major}}.{{minor}}",
+            "type=semver,pattern={{major}}"
+          ]
+        }
+      }
     }
   }
 }

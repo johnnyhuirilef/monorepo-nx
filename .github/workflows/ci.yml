@@ -25,6 +25,12 @@ jobs:
       # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
       # Uncomment this line to enable task distribution
       # - run: npx nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
+      # Log in to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       # Cache node_modules
       - uses: actions/setup-node@v4
@@ -38,47 +44,4 @@ jobs:
       # Prepend any command with "nx-cloud record --" to record its logs to Nx Cloud
       # - run: npx nx-cloud record -- echo Hello World
       # Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected
-      - run: npx nx affected -t lint test build
-
-      # Identify affected apps
-      - name: Identify affected apps
-        id: affected_apps
-        run: echo "::set-output name=apps::$(npx nx print-affected --select=projects)"
-
-      # Build Docker images for each affected app
-      - name: Build Docker images
-        env:
-          IMAGE_PREFIX: ${{ secrets.IMAGE_PREFIX }}
-        run: |
-          for app in ${{ steps.affected_apps.outputs.apps }}
-          do
-            docker build -t $IMAGE_PREFIX$app:latest ./$app
-          done
-
-      # Log in to Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # Check if Docker images exist on Docker Hub
-      - name: Check Docker images
-        run: |
-          for app in ${{ steps.affected_apps.outputs.apps }}
-          do
-            IMAGE_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" -u ${{ secrets.DOCKER_USERNAME }}:${{ secrets.DOCKER_PASSWORD }} https://hub.docker.com/v2/repositories/${{ secrets.DOCKER_USERNAME }}/$IMAGE_PREFIX$app/tags/latest/)
-            if [ $IMAGE_EXISTS -ne 200 ]; then
-              echo "Docker image $IMAGE_PREFIX$app:latest does not exist."
-              exit 1
-            fi
-          done
-
-      # Push Docker images to Docker Hub
-      - name: Push Docker images
-        run: |
-          for app in ${{ steps.affected_apps.outputs.apps }}
-          do
-            docker tag $IMAGE_PREFIX$app:latest ${{ secrets.DOCKER_USERNAME }}/$IMAGE_PREFIX$app:latest
-            docker push ${{ secrets.DOCKER_USERNAME }}/$IMAGE_PREFIX$app:latest
-          done
+      - run: npx nx affected -t lint test build container
