@@ -34,7 +34,7 @@
         "file": "apps/app1/Dockerfile",
         "push": true,
         "metadata": {
-          "images": ["app1"],
+          "images": ["johnnyhuirilef/app1"],
           "load": true,
           "tags": [
             "type=schedule",
